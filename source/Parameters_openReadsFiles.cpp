@@ -3,8 +3,18 @@
 #include <fstream>
 #include <sys/stat.h>
 void Parameters::openReadsFiles() 
-{
-    if (readFilesCommandString=="") {//read from file
+{   
+    if (readFilesTypeN==20) {//binseq
+        if (readFilesIn.size()!=1) {
+            ostringstream errOut;
+            errOut <<"EXITING because of FATAL INPUT ERROR: number of input files for binseq should be 1, not "<< readFilesIn.size()  <<"\n";
+            exitWithError(errOut.str(), std::cerr, inOut->logMain, EXIT_CODE_PARAMETER, *this);
+        };
+        readFilesN=1;
+        binSeq = new BinSeq(readFilesIn[0]);
+        exit(0);
+        return;
+    } else if (readFilesCommandString=="") {//read from file
         for (uint ii=0;ii<readFilesIn.size();ii++) {//open readIn files
             readFilesCommandPID[ii]=0;//no command process IDs
             if ( inOut->readIn[ii].is_open() ) inOut->readIn[ii].close();

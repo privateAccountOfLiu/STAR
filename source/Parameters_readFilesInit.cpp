@@ -10,6 +10,9 @@ void Parameters::readFilesInit()
 
     if (readFilesType.at(0) == "Fastx") {
         readFilesTypeN=1;
+    } else if (readFilesType.at(0) == "binseq") {
+        readFilesTypeN = 20;
+        return;
     } else if (readFilesType.at(0) == "SAM"){
         readFilesTypeN=10;
         readFiles.samAttrKeepAll = false;

@@ -16,9 +16,13 @@
 #include <array>
 #include <unordered_set>
 
+#include "BinSeq.h"
+
 class Parameters {
 
     public:
+        BinSeq *binSeq;
+
         vector <ParameterInfoBase*> parArray, parArrayInitial;
         vector <string> parameterInputName;
 
