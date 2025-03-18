@@ -7,7 +7,8 @@ int readLoad(istream& readInStream, Parameters& P, uint& Lread, uint& LreadOrigi
 {//load one read from a stream
     int readFileType=0;
 
-    if (readInStream.peek()!='@' && readInStream.peek()!='>') 
+    char nextchar=readInStream.peek();
+    if (nextchar!='@' && nextchar!='>') 
         return -1; //end of the stream
 
     string line1;

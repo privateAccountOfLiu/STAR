@@ -1,0 +1,1 @@
+/home/adobin/projects/code/STARsolo_binseq/binseq-bindings/target/release/libbinseq.so: /home/adobin/projects/code/STARsolo_binseq/binseq-bindings/binseq-c/build.rs /home/adobin/projects/code/STARsolo_binseq/binseq-bindings/binseq-c/cbindgen.toml /home/adobin/projects/code/STARsolo_binseq/binseq-bindings/binseq-c/src/lib.rs

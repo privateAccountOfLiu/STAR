@@ -16,8 +16,6 @@ void ReadAlignChunk::mapChunk() {//map one chunk. Input reads stream has to be s
         RA->readInStream[ii]->clear();
         RA->readInStream[ii]->seekg(0,ios::beg);
     };
-    
-    
 
     if ( P.outSAMorder == "PairedKeepInputOrder" && P.runThreadN>1 ) {//open chunk file
         ostringstream name1("");

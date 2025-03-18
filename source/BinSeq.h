@@ -11,7 +11,7 @@ extern "C" {
 #include "IncludeDefine.h"
 #include <string>
 #include <array>
-
+#include <atomic>
 
 class BinSeq
 {
@@ -23,12 +23,15 @@ class BinSeq
 
         char **buffers;
 
-        uint64_t readN, lenR1, lenR2;
+        uint readN, lenR1, lenR2;
         bool isPE;
-        BinSeq(const std::string &fileName);
+        std::atomic<uint> recStart; //current starting position in the binseq file
+        uint recChunkN;
+
+        BinSeq(const std::string &fileName, uint64_t chunkInSizeBytes);
         ~BinSeq();
 
-        bool loadRecord(uint irec, char** buff, std::array<uint, 3> lens);
+        bool loadRecord(uint irec, char** buff, std::array<uint, 3> &lens);
 
 
 };

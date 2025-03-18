@@ -13,26 +13,56 @@ void ReadAlignChunk::processChunks() {//read-map-write chunks
     bool newFile=false; //new file marker in the input stream
     while (!noReadsLeft) {//continue until the input EOF
             //////////////read a chunk from input files and store in memory
-        if (P.readFilesTypeN==20) {//BINSEQ                 
-            while (chunkInSizeBytesTotal[0] < P.chunkInSizeBytes && chunkInSizeBytesTotal[1] < P.chunkInSizeBytes) {           
+        if (P.readFilesTypeN==20) {//BINSEQ
+            auto nReadMax = std::min(P.binSeq->readN, P.readMapNumber);
+
+            if (P.runThreadN>1) pthread_mutex_lock(&g_threadChunks.mutexInRead);
+
+            //if (noReadsLeft) {
+            //    if (P.runThreadN>1) pthread_mutex_unlock(&g_threadChunks.mutexInRead);
+            //    break;
+            //};
+
+            auto iReadAll = P.binSeq->recStart.fetch_add(P.binSeq->recChunkN);
+            auto iReadAllEnd = iReadAll + P.binSeq->recChunkN;
+
+            if (iReadAll >= nReadMax) {//do not read any more reads
+                noReadsLeft=true;
+            };
+
+            if (iReadAllEnd > nReadMax) {//do not read any more reads
+                noReadsLeft=true;
+                iReadAllEnd = nReadMax;
+            };
+
+            chunkInSizeBytesTotal={0,0};
+            while (iReadAll < iReadAllEnd) {           
+
+                assert (chunkInSizeBytesTotal[0] < P.chunkInSizeBytes && chunkInSizeBytesTotal[1] < P.chunkInSizeBytes);
 
                 //read ID
                 for (uint imate1=0; imate1<P.readNends; imate1++) {
-                    chunkInSizeBytesTotal[imate1] += sprintf(chunkIn[imate1] + chunkInSizeBytesTotal[imate1], ">%llu %c %i", P.iReadAll, 'Y', P.readFilesIndex);
+                    chunkInSizeBytesTotal[imate1] += sprintf(chunkIn[imate1] + chunkInSizeBytesTotal[imate1], ">%llu %c %i\n", iReadAll+1, 'Y', P.readFilesIndex);
                 };                    
 
                 //sequence(s)
-                if (!P.binSeq->loadRecord(P.iReadAll, chunkIn, chunkInSizeBytesTotal)) {
+                if (!P.binSeq->loadRecord(iReadAll, chunkIn, chunkInSizeBytesTotal)) {
                     ostringstream errOut;
-                    errOut << "EXITING because of FATAL ERROR in input binseq file: could not read record " << P.iReadAll << '\n';
+                    errOut << "EXITING because of FATAL ERROR in input binseq file: could not read record " << iReadAll << '\n';
                     exitWithError(errOut.str(),std::cerr, P.inOut->logMain, EXIT_CODE_INPUT_FILES, P);
                 };
-                ++P.iReadAll;
-                if (P.iReadAll == P.binSeq->readN || P.iReadAll==P.readMapNumber) {//do not read any more reads
-                    noReadsLeft=true;
-                    break;
-                };                
+
+                iReadAll++;
             };
+
+            for (uint imate=0; imate<P.readNends; imate++) 
+                chunkIn[imate][chunkInSizeBytesTotal[imate]]='\n';//extra empty line at the end of the chunks
+
+            iChunkIn=g_threadChunks.chunkInN;//to keep things consistent
+            g_threadChunks.chunkInN++;
+
+            if (P.runThreadN>1) pthread_mutex_unlock(&g_threadChunks.mutexInRead);
+
         } else if (P.outFilterBySJoutStage<2) {//read chunks from input file
 
             if (P.runThreadN>1) pthread_mutex_lock(&g_threadChunks.mutexInRead);

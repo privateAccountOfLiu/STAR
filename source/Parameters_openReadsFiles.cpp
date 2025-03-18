@@ -11,7 +11,7 @@ void Parameters::openReadsFiles()
             exitWithError(errOut.str(), std::cerr, inOut->logMain, EXIT_CODE_PARAMETER, *this);
         };
         readFilesN=1;
-        binSeq = new BinSeq(readFilesIn[0]);
+        binSeq = new BinSeq(readFilesIn[0], limitIObufferSize[0]);
 
         if (binSeq->isPE) {
             readNends=2;
