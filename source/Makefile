@@ -19,13 +19,17 @@ LDFLAGS_Mac_static :=-pthread -lz -static-libgcc htslib/libhts.a
 LDFLAGS_gdb := $(LDFLAGS_shared)
 
 DATE_FMT = --iso-8601=seconds
+ifdef OS # Windows
+    BUILD_DATE ?= $(shell powershell -Command "Get-Date -Format 'yyyy-MM-ddTHH:mm:ssK'" 2>/dev/null || echo unknown-date)
+    BUILD_PLACE ?= $(COMPUTERNAME):$(CURDIR)
+else
 ifdef SOURCE_DATE_EPOCH
     BUILD_DATE ?= $(shell date -u -d "@$(SOURCE_DATE_EPOCH)" "$(DATE_FMT)" 2>/dev/null || date -u -r "$(SOURCE_DATE_EPOCH)" "$(DATE_FMT)" 2>/dev/null || date -u "$(DATE_FMT)")
 else
     BUILD_DATE ?= $(shell date "$(DATE_FMT)")
 endif
-
 BUILD_PLACE ?= $(HOSTNAME):$(shell pwd)
+endif
 
 COMPTIMEPLACE := -D'COMPILATION_TIME_PLACE="$(BUILD_DATE) $(BUILD_PLACE)"'
 
@@ -149,7 +153,10 @@ htslib/libhts.a :
 	$(MAKE) -C htslib lib-static
 
 parametersDefault.xxd: parametersDefault
-	xxd -i parametersDefault > parametersDefault.xxd
+	@which xxd > /dev/null 2>&1 && xxd -i parametersDefault > parametersDefault.xxd || \
+		python3 ../scripts/xxd_i.py parametersDefault parametersDefault.xxd || \
+		python ../scripts/xxd_i.py parametersDefault parametersDefault.xxd || \
+		(echo "ERROR: neither xxd nor python available to generate parametersDefault.xxd" && exit 1)
 
 STAR$(SFX) : CXXFLAGS := $(CXXFLAGSextra) $(CXXFLAGS_main) $(CXXFLAGS)
 STAR$(SFX) : LDFLAGS := $(LDFLAGSextra) $(LDFLAGS_shared) $(LDFLAGS)
@@ -197,3 +204,19 @@ STARlongForMacStatic : CXXFLAGS := -D'COMPILE_FOR_LONG_READS' $(CXXFLAGSextra) $
 STARlongForMacStatic : LDFLAGS := $(LDFLAGSextra) $(LDFLAGS_Mac_static) $(LDFLAGS)
 STARlongForMacStatic : Depend.list parametersDefault.xxd $(OBJECTS)
 	$(CXX) -o STARlong $(CXXFLAGS) $(OBJECTS) $(LDFLAGS)
+
+###########################################################################
+# Windows MinGW targets
+# Usage in MSYS2 UCRT64: make STARwin
+###########################################################################
+STARwin : CXXFLAGS := $(CXXFLAGSextra) $(CXXFLAGS_main) $(CXXFLAGS)
+STARwin : LDFLAGS := -static -pthread -Lhtslib -lhts -lz -lws2_32 $(LDFLAGSextra)
+STARwin : Depend.list parametersDefault.xxd $(OBJECTS)
+	$(CXX) -o STAR.exe $(CXXFLAGS) $(OBJECTS) $(LDFLAGS)
+
+STARlongWin : CXXFLAGS := $(CXXFLAGSextra) $(CXXFLAGS_main) -D'COMPILE_FOR_LONG_READS' $(CXXFLAGS)
+STARlongWin : LDFLAGS := -static -pthread -Lhtslib -lhts -lz -lws2_32 $(LDFLAGSextra)
+STARlongWin : Depend.list parametersDefault.xxd $(OBJECTS)
+	$(CXX) -o STARlong.exe $(CXXFLAGS) $(OBJECTS) $(LDFLAGS)
+
+.PHONY: STARwin STARlongWin

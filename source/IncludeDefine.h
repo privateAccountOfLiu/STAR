@@ -12,12 +12,17 @@
 #include <ctime>
 #include <iomanip>
 #include <vector>
+#ifndef _WIN32
 #include <sys/types.h>
 #include <sys/ipc.h>
 #include <sys/shm.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#else
+#include "windows_compat.h"
+#include <sys/stat.h>
+#endif
 #include <errno.h>
 #include <limits>
 #include <stdint.h>

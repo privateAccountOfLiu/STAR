@@ -6,8 +6,10 @@
 #include "ParameterInfo.h"
 #include <map>
 #include "TimeFunctions.h"
+#ifndef _WIN32
 #include <unistd.h>
 #include <signal.h>
+#endif
 #include "ParametersChimeric.h"
 #include "ParametersSolo.h"
 #include "ParametersClip.h"
@@ -70,7 +72,11 @@ class Parameters {
                
         string readFilesCommandString; //actual command string
         int readFilesIndex;
+#ifdef _WIN32
+        HANDLE readFilesCommandPID[MAX_N_MATES];
+#else
         pid_t readFilesCommandPID[MAX_N_MATES];
+#endif
 
         uint readMapNumber;
         uint iReadAll;

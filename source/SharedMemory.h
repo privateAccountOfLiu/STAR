@@ -1,14 +1,19 @@
-// SharedMemory.cpp
+// SharedMemory.h
 // Gery Vessere - gvessere@illumina.com, gery@vessere.com
 // An abstraction over both SysV and POSIX shared memory APIs
+// Windows support via CreateFileMapping/MapViewOfFile
 
 #ifndef SHAREDMEMORY_H
 #define SHAREDMEMORY_H
 
 
 #include <string>
+#ifndef _WIN32
 #include <semaphore.h>
 #include <unistd.h>
+#else
+#include "windows_compat.h"
+#endif
 #include <exception>
 #include <iostream>
 
@@ -112,7 +117,11 @@ public:
 
         int GetId() const
         {
+#ifdef _WIN32
+            return (_hMapping != NULL) ? 1 : -1;
+#else
             return _shmID;
+#endif
         };
 
         bool HasError() const
@@ -147,13 +156,20 @@ public:
 private:
         SharedMemoryException _exception;
 
+#ifdef _WIN32
+        void * _hMapping;       // HANDLE to file mapping
+        void * _hCounterMapping; // HANDLE to counter mapping
+#else
         int _shmID;
         int _sharedCounterID;
+#endif
         void * _counterMem;
 
         void * _mapped;
         size_t * _length;
+#ifndef _WIN32
         sem_t * _sem;
+#endif
         bool _isAllocator;
         bool _needsAllocation;
 
@@ -166,17 +182,20 @@ private:
         void OpenIfExists();
         void CreateAndInitSharedObject(size_t shmSize);
         void MapSharedObjectToMemory();
+#ifndef _WIN32
         std::string GetPosixObjectKey();
         struct stat GetSharedObjectInfo();
+        std::string CounterName();
+#endif
         void Close();
         void Unlink();
 
-        std::string CounterName();
-
         void EnsureCounter();
         void RemoveSharedCounter();
+#ifndef _WIN32
         void SharedUseIncrement();
         void SharedUseDecrement();
+#endif
 };
 
 #endif

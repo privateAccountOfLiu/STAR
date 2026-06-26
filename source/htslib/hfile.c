@@ -294,13 +294,17 @@ void hclose_abruptly(hFILE *fp)
  * File descriptor backend *
  ***************************/
 
+#ifndef _WIN32
 #include <sys/socket.h>
+#endif
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
 
 #ifdef _WIN32
 #define HAVE_CLOSESOCKET
+#include <winsock2.h>
+#define fsync(fd) _commit(fd)
 #endif
 
 /* For Unix, it doesn't matter whether a file descriptor is a socket.
@@ -381,7 +385,11 @@ static size_t blksize(int fd)
 {
     struct stat sbuf;
     if (fstat(fd, &sbuf) != 0) return 0;
+#ifdef _WIN32
+    return 4096; // default block size on Windows/NTFS
+#else
     return sbuf.st_blksize;
+#endif
 }
 
 static hFILE *hopen_fd(const char *filename, const char *mode)

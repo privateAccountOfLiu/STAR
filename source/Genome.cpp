@@ -9,14 +9,20 @@
 
 #include <time.h>
 #include <cmath>
+#ifndef _WIN32
 #include <unistd.h>
+#endif
 #include <sys/stat.h>
 
 Genome::Genome (Parameters &P, ParametersGenome &pGe): shmStart(NULL), P(P), pGe(pGe), sharedMemory(NULL)
 {
     struct stat stbuf;
     stat(pGe.gDir.c_str(), &stbuf);
+#ifdef _WIN32
+    shmKey = std::hash<std::string>{}(pGe.gDir);
+#else
     shmKey=stbuf.st_ino;
+#endif
     genomeOut.g=this;//will change if genomeOut is different from genomeMain
     genomeOut.convYes=false;
     sjdbOverhang = pGe.sjdbOverhang; //will be re-defined later if another value was used for the generated genome

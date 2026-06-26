@@ -1,7 +1,9 @@
 #include "streamFuns.h"
 #include "ErrorWarning.h"
 #include <fstream>
+#ifndef _WIN32
 #include <sys/statvfs.h>
+#endif
 #include <sys/stat.h>
 #include <stdio.h>
 #define fstream_Chunk_Max 2147483647

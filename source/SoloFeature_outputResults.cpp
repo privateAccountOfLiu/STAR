@@ -6,7 +6,9 @@
 #include "ErrorWarning.h"
 #include "SoloFeatureTypes.h"
 
+#ifndef _WIN32
 #include<unistd.h> // for get_current_dir
+#endif
 
 
 void SoloFeature::outputResults(bool cellFilterYes, string outputPrefixMat)
@@ -44,6 +46,13 @@ void SoloFeature::outputResults(bool cellFilterYes, string outputPrefixMat)
         };
         case SoloFeatureTypes::SJ :
             string sjout; //full path to SJ.out.tab with user-defined prefix
+#ifdef _WIN32
+            {
+                char cwd[4096];
+                _getcwd(cwd, sizeof(cwd));
+                sjout = string(cwd) + '\\' + P.outFileNamePrefix + "SJ.out.tab";
+            }
+#else
             if (P.outFileNamePrefix[0]=='/') {
                 sjout = P.outFileNamePrefix + "SJ.out.tab";
             } else {
@@ -52,13 +61,23 @@ void SoloFeature::outputResults(bool cellFilterYes, string outputPrefixMat)
                 sjout.append(cwd);
                 sjout += '/' + P.outFileNamePrefix + "SJ.out.tab";
             };
+#endif
 
-            remove((outputPrefixMat+pSolo.outFileNames[1]).c_str()); //remove symlink before creating it
+            remove((outputPrefixMat+pSolo.outFileNames[1]).c_str());
+#ifdef _WIN32
+            // On Windows, symlink is unreliable without admin privileges; copy file instead
+            if (!CopyFileA(sjout.c_str(), (outputPrefixMat+pSolo.outFileNames[1]).c_str(), FALSE))
+                 exitWithError("EXITING because of fatal OUTPUT FILE error: could not copy SJ file "
+                      + sjout + " to " + outputPrefixMat+pSolo.outFileNames[1]
+                      + "\nSOLUTION: check the path and permissions\n",
+                       std::cerr, P.inOut->logMain, EXIT_CODE_PARAMETER, P);
+#else
             if ( symlink(sjout.c_str(), (outputPrefixMat+pSolo.outFileNames[1]).c_str()) != 0 )
                  exitWithError("EXITING because of fatal OUTPUT FILE error: could not sym-link "
                       + sjout + " into " + outputPrefixMat+pSolo.outFileNames[1]
                       + "\nSOLUTION: check the path and permisssions\n",
                        std::cerr, P.inOut->logMain, EXIT_CODE_PARAMETER, P);
+#endif
     };
 
     ////////////////////////////////////////////////////////////////////////////

@@ -16,6 +16,28 @@ void Parameters::readSAMheader(const string readFilesCommandString, const vector
         return;
     };
 
+#ifdef _WIN32
+    // Windows: use temporary file instead of FIFO
+    string tmpOut = outFileTmp + "tmp.readHeader.out";
+    remove(tmpOut.c_str());
+
+    ifstream tmpIn;
+    for (uint32 ii=0; ii<readFilesNames.size(); ii++) {
+        string com1 = readFilesCommandString + " \"" + readFilesNames.at(ii) + "\" > \"" + tmpOut + "\"";
+        system(com1.c_str());
+        tmpIn.open(tmpOut.c_str());
+        while (tmpIn.peek()=='@') {
+            string str1;
+            getline(tmpIn,str1);
+            if (str1.substr(1,2)!="HD" && str1.substr(1,2)!="SQ" && (!twoPass.pass2) ) {
+                samHeaderExtra += str1 + '\n';
+            };
+        };
+        tmpIn.close();
+    };
+    remove(tmpOut.c_str());
+#else
+    // Unix: original mkfifo implementation
     string tmpFifo=outFileTmp+"tmp.fifo.header";
     remove(tmpFifo.c_str());
     if (mkfifo(tmpFifo.c_str(), S_IRUSR | S_IWUSR ) != 0) {
@@ -41,4 +63,5 @@ void Parameters::readSAMheader(const string readFilesCommandString, const vector
         };
         tmpFifoIn.close();
     };
+#endif
 };

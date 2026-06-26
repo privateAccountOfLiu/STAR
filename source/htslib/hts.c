@@ -1,3 +1,4 @@
+#include "config.h"
 #include <zlib.h>
 #include <ctype.h>
 #include <stdio.h>
