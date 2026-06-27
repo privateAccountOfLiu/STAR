@@ -1,6 +1,6 @@
 # STAR for Windows x86
 
-[![STAR](https://img.shields.io/badge/alexdobin)](https://github.com/alexdobin/STAR)
+[![STAR](https://img.shields.io/badge/STAR-alexdobin-39c5bb.svg)](https://github.com/alexdobin/STAR)
 
 STAR (Spliced Transcripts Alignment to a Reference) 的 Windows 移植版本，基于原版 [alexdobin/STAR](https://github.com/alexdobin/STAR) v2.7.11b。
 
